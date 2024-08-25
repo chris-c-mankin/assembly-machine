@@ -1,0 +1,7 @@
+Designator,Footprint,Mid X,Mid Y,Ref X,Ref Y,Pad X,Pad Y,Layer,Rotation,Comment
+,,,,,,,,,,
+R12,RES_0805_N,7.112mm,12.258mm,7.112mm,12.258mm,7.112mm,13.208mm,T,270,4.7k
+R5,RES_0805_N,6.096mm,0.508mm,6.096mm,0.508mm,7.046mm,0.508mm,T,180,4.7k
+R21,RES_0603_N,17.526mm,8.374mm,17.526mm,8.374mm,17.526mm,7.574mm,T,90,100k
+R20,RES_0603_N,22.86mm,9.906mm,22.86mm,9.906mm,22.86mm,9.106mm,T,90,10k
+R19,RES_0603_N,28.194mm,25.654mm,28.194mm,25.654mm,28.194mm,24.854mm,T,90,100k

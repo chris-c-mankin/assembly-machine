@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class FeederConfigurationLineDto {
   @IsString()
@@ -10,26 +10,26 @@ export class FeederConfigurationLineDto {
   number: number;
 
   @IsNumber()
-  @IsOptional()
-  partNumber?: number;
+  @IsNotEmpty()
+  partNumber: number | null;
 
   @IsString()
-  @IsOptional()
-  description?: string;
+  @IsNotEmpty()
+  description: string | null;
  
   @IsNumber()
   @IsNotEmpty()
-  quantity: number;
+  quantity: number | null;
 
   @IsString()
   @IsNotEmpty()
-  sku: string;
+  sku: string | null;
 
   @IsNumber()
-  @IsOptional()
-  placeHeight?: number;
+  @IsNotEmpty()
+  placeHeight: number | null;
 
   @IsNumber()
-  @IsOptional()
-  nozzle?: number;
+  @IsNotEmpty()
+  nozzle: number | null;
 }
