@@ -7,7 +7,9 @@ export class FeederSetup {
     this.lines = new Map<string, FeederConfigurationLine>();
     dtos.forEach((dto) => {
       const line = FeederConfigurationLine.FromDto(dto);
-      this.lines.set(line.__key, line);
+      if (line.__key) {
+        this.lines.set(line.__key, line);
+      }
     });
   }
 }
@@ -15,15 +17,15 @@ export class FeederSetup {
 export class FeederConfigurationLine {
   type: string;
   number: number;
-  partNumber?: number;
-  description?: string;
-  quantity: number;
-  sku: string;
-  placeHeight?: number;
-  nozzle?: number;
+  partNumber: number | null;
+  description: string | null;
+  quantity: number | null;
+  sku: string | null;
+  placeHeight: number | null;
+  nozzle: number | null;
 
   get __key() {
-    return this.number.toString();
+    return this.sku;
   }
 
   static FromDto(dto: FeederConfigurationLineDto) {

@@ -2,12 +2,14 @@ import { BillOfMaterialsComponentDto } from "../dtos/bill-of-materials-component
 
 export class BillOfMaterials {
   components: Map<string, BillOfMaterialsComponent>;
+  designatorSkuMapping: Map<string, string> = new Map<string, string>();
 
   constructor(dtos: BillOfMaterialsComponentDto[]) {
     this.components = new Map<string, BillOfMaterialsComponent>();
     dtos.forEach((dto) => {
       const component = BillOfMaterialsComponent.FromDto(dto);
       this.components.set(component.__key, component);
+      this.designatorSkuMapping.set(component.designator, component.sku);
     });
   }
 }
