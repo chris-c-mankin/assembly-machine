@@ -3,9 +3,9 @@
   "productName": "assembly",
   "version": "1.0.0",
   "description": "My Electron application description",
-  "main": "src/index.js",
+  "main": "dist/electron.js",
   "scripts": {
-    "start": "npm run build && electron ./dist/electron.js",
+    "start": "npm run build && electron-forge start --app-path ./dist/electron.js",
     "build": "npm run clean && webpack --config ./webpack.config.js",
     "clean": "rm -rf dist",
     "package": "electron-forge package",
@@ -43,7 +43,7 @@
   "keywords": [],
   "author": {
     "name": "Chris Mankin",
-    "email": "chris.mankin@groundfloordelivery.com"
+    "email": "chris.c.mankin@gmail.com"
   },
   "license": "MIT",
   "dependencies": {
