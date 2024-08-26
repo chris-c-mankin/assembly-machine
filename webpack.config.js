@@ -27,6 +27,9 @@ module.exports = [
       include: /src/,
       use: [{ loader: 'ts-loader' }]
     }] },
+    resolve: {
+      extensions: ['.js', '.jsx', '.ts', '.tsx', '.json']
+    },
     output: {
       path: __dirname + '/dist',
       filename: 'react.js'

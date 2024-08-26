@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
-    "jsx": "react",
+    "jsx": "react-jsx",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strictNullChecks": true,
+    "module": "commonjs",
+    "esModuleInterop": true,
   }
 }
