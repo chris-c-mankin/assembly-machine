@@ -10,6 +10,10 @@ export class AssemblyFile {
       this.operations.set(operation.__key, operation);
     });
   }
+
+  isValid() {
+    return true;
+  }
 }
 
 export class AssemblyOperation {

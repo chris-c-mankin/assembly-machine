@@ -12,6 +12,10 @@ export class BillOfMaterials {
       this.designatorSkuMapping.set(component.designator, component.sku);
     });
   }
+
+  isValid() {
+    return true;
+  }
 }
 
 export class BillOfMaterialsComponent {

@@ -12,6 +12,10 @@ export class FeederSetup {
       }
     });
   }
+
+  isValid() {
+    return true;
+  }
 }
 
 export class FeederConfigurationLine {

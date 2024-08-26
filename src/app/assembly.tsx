@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import InputFileUpload from "./file-upload";
-import { Button } from "@mui/material";
+import { Box, Button, Container, Grid } from "@mui/material";
 import { BillOfMaterialsParser } from "./parsers/bill-of-materials/bill-of-materials.parser";
 import { AssemblyFileParser } from "./parsers/assembly-file/assembly-file.parser";
 import { FeederSetupParser } from "./parsers/feeder-setup/feeder-setup.parser";
@@ -9,33 +8,107 @@ import { BillOfMaterials } from "./models/bill-of-materials.model";
 import { AssemblyFile } from "./models/assembly-file.model";
 import { FeederSetup } from "./models/feeder-setup.model";
 import { ProductionFileParser } from "./parsers/production-file/production-file.parser";
+import InputFileUpload from "../components/file-upload.component";
+import { useImmer } from "use-immer";
 
-interface State {
-  billOfMaterialsFile?: File;
-  assemblyFile?: File;
-  feederSetupFile?: File;
-
-  billOfMaterialsCsv?: string;
-  assemblyCsv?: string;
-  feederSetupCsv?: string;
+interface FileUploadState<T> {
+  blob?: File;
+  csv?: string;
+  model?: T;
+  isProcessing: boolean;
 }
 
+interface State {
+  billOfMaterials: FileUploadState<BillOfMaterials>;
+  assemblyFile: FileUploadState<AssemblyFile>;
+  feederSetupFile: FileUploadState<FeederSetup>;
+}
+
+const initialState: State = {
+  billOfMaterials: {
+    isProcessing: false,
+  },
+  assemblyFile: {
+    isProcessing: false,
+  },
+  feederSetupFile: {
+    isProcessing: false,
+  },
+};
+
 export function Assembly() {
-  const [state, setState] = useState<State>({});
+  const [state, setState] = useImmer(initialState);
 
   function onUploadBillOfMaterials(file: File | undefined) {
-    setState({ ...state, billOfMaterialsFile: file });
-    processFile((csv) => setState({ ...state, billOfMaterialsCsv: csv }), file);
+    setState((draft) => {
+      draft.billOfMaterials.blob = file;
+      draft.billOfMaterials.isProcessing = true;
+    });
+    processFile((csv) => {
+      const billOfMaterialsDtos = BillOfMaterialsParser.Parse(csv);
+      const billOfMaterials = new BillOfMaterials(billOfMaterialsDtos);
+      setState((state) => {
+        state.billOfMaterials.csv = csv;
+        state.billOfMaterials.model = billOfMaterials;
+        state.billOfMaterials.isProcessing = false;
+      });
+    }, file);
   }
 
   function onUploadAssembly(file: File | undefined) {
-    setState({ ...state, assemblyFile: file });
-    processFile((csv) => setState({ ...state, assemblyCsv: csv }), file);
+    setState((state) => {
+      state.assemblyFile.blob = file;
+      state.assemblyFile.isProcessing = true;
+    });
+    processFile((csv) => {
+      const assemblyDtos = AssemblyFileParser.Parse(csv);
+      const assemblyFile = new AssemblyFile(assemblyDtos);
+      setState((state) => {
+        state.assemblyFile.csv = csv;
+        state.assemblyFile.model = assemblyFile;
+        state.assemblyFile.isProcessing = false;
+      });
+    }, file);
   }
 
   function onUploadFeederSetup(file: File | undefined) {
-    setState({ ...state, feederSetupFile: file });
-    processFile((csv) => setState({ ...state, feederSetupCsv: csv }), file);
+    setState((state) => {
+      state.feederSetupFile.blob = file;
+      state.feederSetupFile.isProcessing = true;
+    });
+    processFile((csv) => {
+      const feederSetupDtos = FeederSetupParser.Parse(csv);
+      const feederSetupFile = new FeederSetup(feederSetupDtos);
+      setState((state) => {
+        state.feederSetupFile.csv = csv;
+        state.feederSetupFile.model = feederSetupFile;
+        state.feederSetupFile.isProcessing = false;
+      });
+    }, file);
+  }
+
+  function onDeleteBillOfMaterials() {
+    setState((state) => {
+      state.billOfMaterials = {
+        ...initialState.billOfMaterials
+      };
+    });
+  }
+
+  function onDeleteAssembly() {
+    setState((state) => {
+      state.assemblyFile = {
+        ...initialState.assemblyFile
+      };
+    });
+  }
+
+  function onDeleteFeederSetup() {
+    setState((state) => {
+      state.feederSetupFile = {
+        ...initialState.feederSetupFile
+      };
+    });
   }
 
   function processFile(onLoad: (csv: string) => void, file: File | undefined) {
@@ -53,31 +126,29 @@ export function Assembly() {
   }
 
   const canGenerate = useMemo(() => {
-    return state.billOfMaterialsCsv && state.assemblyCsv && state.feederSetupCsv
+    return state.billOfMaterials.model &&
+      state.assemblyFile.model &&
+      state.feederSetupFile.model
       ? true
       : false;
-  }, [state.billOfMaterialsCsv, state.assemblyCsv, state.feederSetupCsv]);
+  }, [
+    state.billOfMaterials.model,
+    state.assemblyFile.model,
+    state.feederSetupFile.model,
+  ]);
 
   function onGenerate() {
     if (!canGenerate) {
       return;
     }
-    if (
-      !state.billOfMaterialsCsv ||
-      !state.assemblyCsv ||
-      !state.feederSetupCsv
-    ) {
+
+    const billOfMaterials = state.billOfMaterials.model;
+    const assemblyFile = state.assemblyFile.model;
+    const feederSetupFile = state.feederSetupFile.model;
+
+    if (!billOfMaterials || !assemblyFile || !feederSetupFile) {
       return;
     }
-    const billOfMaterialsDtos = BillOfMaterialsParser.Parse(
-      state.billOfMaterialsCsv
-    );
-    const assemblyDtos = AssemblyFileParser.Parse(state.assemblyCsv);
-    const feederSetupDtos = FeederSetupParser.Parse(state.feederSetupCsv);
-
-    const billOfMaterials = new BillOfMaterials(billOfMaterialsDtos);
-    const assemblyFile = new AssemblyFile(assemblyDtos);
-    const feederSetupFile = new FeederSetup(feederSetupDtos);
 
     const productionFile = new ProductionFile();
     productionFile.generateOperations(
@@ -97,25 +168,73 @@ export function Assembly() {
     link.click();
   }
 
-  console.log({
-    billOfMaterialsCsv: state.billOfMaterialsCsv,
-    assemblyCsv: state.assemblyCsv,
-    feederSetupCsv: state.feederSetupCsv,
-    canGenerate,
-  });
-
   return (
-    <>
-      <h1>Assembly</h1>
-      <InputFileUpload
-        label="Bill of Materials"
-        onChange={onUploadBillOfMaterials}
-      />
-      <InputFileUpload label="Assembly File" onChange={onUploadAssembly} />
-      <InputFileUpload label="Feeder Setup" onChange={onUploadFeederSetup} />
-      <Button disabled={!canGenerate} onClick={onGenerate}>
-        Generate
-      </Button>
-    </>
+    <Container
+      sx={{
+        textAlign: "center",
+        height: "100%",
+      }}
+    >
+      <h1>Assembly Machine - Production File Generator</h1>
+      <Grid
+        container
+        direction="column"
+        justifyContent="space-between"
+        sx={{
+          height: "100%",
+        }}
+      >
+        <Box
+          sx={{
+            fontSize: "0.7rem",
+          }}
+        >
+          <Grid
+            item
+            container
+            direction="row"
+            spacing={4}
+            alignItems="center"
+            justifyContent="space-evenly"
+          >
+            <Grid item>
+              <InputFileUpload
+                label="Bill of Materials"
+                onChange={onUploadBillOfMaterials}
+                fileName={state.billOfMaterials.blob?.name}
+                isProcessing={state.billOfMaterials.isProcessing}
+                isValid={state.billOfMaterials.model?.isValid() ?? false}
+                onDelete={onDeleteBillOfMaterials}
+              />
+            </Grid>
+            <Grid item>
+              <InputFileUpload
+                label="Assembly File"
+                onChange={onUploadAssembly}
+                fileName={state.assemblyFile.blob?.name}
+                isProcessing={state.assemblyFile.isProcessing}
+                isValid={state.assemblyFile.model?.isValid() ?? false}
+                onDelete={onDeleteAssembly}
+              />
+            </Grid>
+            <Grid item>
+              <InputFileUpload
+                label="Feeder Setup"
+                onChange={onUploadFeederSetup}
+                fileName={state.feederSetupFile.blob?.name}
+                isProcessing={state.feederSetupFile.isProcessing}
+                isValid={state.feederSetupFile.model?.isValid() ?? false}
+                onDelete={onDeleteFeederSetup}
+              />
+            </Grid>
+          </Grid>
+        </Box>
+        <Grid item>
+          <Button disabled={!canGenerate} onClick={onGenerate} variant="contained">
+            Generate
+          </Button>
+        </Grid>
+      </Grid>
+    </Container>
   );
 }
