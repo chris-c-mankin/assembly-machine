@@ -8,6 +8,7 @@ import { ProductionFile } from "./models/production-file.model";
 import { BillOfMaterials } from "./models/bill-of-materials.model";
 import { AssemblyFile } from "./models/assembly-file.model";
 import { FeederSetup } from "./models/feeder-setup.model";
+import { ProductionFileParser } from "./parsers/production-file/production-file.parser";
 
 interface State {
   billOfMaterialsFile?: File;
@@ -85,9 +86,15 @@ export function Assembly() {
       feederSetupFile
     );
 
-    const operations = productionFile.getOperations();
+    const csv = ProductionFileParser.Serialize(productionFile);
 
-    console.log(operations);
+    // Download the file
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "production-file.csv";
+    link.click();
   }
 
   console.log({
