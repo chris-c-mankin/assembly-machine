@@ -7,6 +7,10 @@ export class ProductionFile {
     string,
     ProductionOperation
   >();
+  private manualOperations: Map<string, ManualOperation> = new Map<
+    string,
+    ManualOperation
+  >();
 
   generateOperations(
     billOfMaterials: BillOfMaterials,
@@ -23,15 +27,8 @@ export class ProductionFile {
             assemblyOperation.designator
         );
       }
-      const feederLine = feederSetup.lines.get(sku);
-      if (!feederLine) {
-        throw new Error(
-          "Error mapping Assemble File and Feeder Setup: No Feeder Line found in Feeder Setup for SKU: " +
-            sku
-        );
-      }
 
-      const operation = new ProductionOperation();
+      const operation = new Operation();
       operation.designator = assemblyOperation.designator;
       operation.comment = sku;
       operation.footprint = assemblyOperation.footprint;
@@ -39,15 +36,25 @@ export class ProductionFile {
       operation.midpointPositionY = assemblyOperation.midpointPositionY;
       operation.rotation = assemblyOperation.rotation;
       operation.head = 0; // TODO: What is this?
-      operation.feederNumber = feederLine.number;
-      operation.mountSpeedPercentage = 50; // TODO: What is this?
-      operation.pickHeightMm = 0; // TODO: What is this?
-      operation.placeHeightMm = feederLine.placeHeight || 0;
-      operation.mode = 1; // TODO: What is this?
-      operation.skip = 0; // TODO: What is this?
-      operation.nozzle = feederLine.nozzle || 0;
 
-      this.operations.set(operation.__key, operation);
+      const feederLine = feederSetup.lines.get(sku);
+
+      if (!feederLine) {
+        const manualOperation = ManualOperation.FromOperation(operation);
+        this.manualOperations.set(manualOperation.__key, manualOperation);
+        return;
+      }
+
+      const productionOperation = ProductionOperation.FromOperation(operation);
+      productionOperation.feederNumber = feederLine.number;
+      productionOperation.mountSpeedPercentage = 50; // TODO: What is this?
+      productionOperation.pickHeightMm = 0; // TODO: What is this?
+      productionOperation.placeHeightMm = feederLine.placeHeight || 0;
+      productionOperation.mode = 1; // TODO: What is this?
+      productionOperation.skip = 0; // TODO: What is this?
+      productionOperation.nozzle = feederLine.nozzle || 0;
+
+      this.operations.set(operation.__key, productionOperation);
     });
   }
 
@@ -56,20 +63,25 @@ export class ProductionFile {
     return this.sortOperations(operations);
   }
 
-  private sortOperations(
-    operations: ProductionOperation[]
-  ): ProductionOperation[] {
+  getManualOperations(): ManualOperation[] {
+    const manualOperations = Array.from(this.manualOperations.values());
+    return this.sortOperations(manualOperations);
+  }
+
+  private sortOperations<T extends Operation>(operations: T[]): T[] {
     return operations.sort((a, b) => {
-      const nozzleComparison = this.compareNumbers(a.nozzle, b.nozzle);
-      if (nozzleComparison !== 0) {
-        return nozzleComparison;
-      }
-      const placeHeightComparison = this.compareNumbers(
-        a.placeHeightMm,
-        b.placeHeightMm
-      );
-      if (placeHeightComparison !== 0) {
-        return placeHeightComparison;
+      if (a instanceof ProductionOperation && b instanceof ProductionOperation) {
+        const nozzleComparison = this.compareNumbers(a.nozzle, b.nozzle);
+        if (nozzleComparison !== 0) {
+          return nozzleComparison;
+        }
+        const placeHeightComparison = this.compareNumbers(
+          a.placeHeightMm,
+          b.placeHeightMm
+        );
+        if (placeHeightComparison !== 0) {
+          return placeHeightComparison;
+        }
       }
       const skuComparison = this.compareSkus(a.comment, b.comment);
       if (skuComparison !== 0) {
@@ -107,7 +119,7 @@ export class ProductionFile {
   }
 }
 
-export class ProductionOperation {
+export class Operation {
   designator: string;
   comment: string;
   footprint: string;
@@ -115,6 +127,13 @@ export class ProductionOperation {
   midpointPositionY: number;
   rotation: number;
   head: number;
+
+  get __key(): string {
+    return this.designator;
+  }
+}
+
+export class ProductionOperation extends Operation {
   feederNumber: number;
   mountSpeedPercentage: number;
   pickHeightMm: number;
@@ -123,7 +142,29 @@ export class ProductionOperation {
   skip: number;
   nozzle: number;
 
-  get __key(): string {
-    return this.designator;
+  static FromOperation(operation: Operation): ProductionOperation {
+    const productionOperation = new ProductionOperation();
+    productionOperation.designator = operation.designator;
+    productionOperation.comment = operation.comment;
+    productionOperation.footprint = operation.footprint;
+    productionOperation.midpointPositionX = operation.midpointPositionX;
+    productionOperation.midpointPositionY = operation.midpointPositionY;
+    productionOperation.rotation = operation.rotation;
+    productionOperation.head = operation.head;
+    return productionOperation;
+  }
+}
+
+export class ManualOperation extends Operation {
+  static FromOperation(operation: Operation): ManualOperation {
+    const manualOperation = new ManualOperation();
+    manualOperation.designator = operation.designator;
+    manualOperation.comment = operation.comment;
+    manualOperation.footprint = operation.footprint;
+    manualOperation.midpointPositionX = operation.midpointPositionX;
+    manualOperation.midpointPositionY = operation.midpointPositionY;
+    manualOperation.rotation = operation.rotation;
+    manualOperation.head = operation.head;
+    return manualOperation;
   }
 }

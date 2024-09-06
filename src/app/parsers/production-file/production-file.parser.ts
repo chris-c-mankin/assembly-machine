@@ -1,25 +1,55 @@
-import { ProductionFile } from "../../models/production-file.model";
+import {
+  Operation,
+  ProductionFile,
+  ProductionOperation,
+} from "../../models/production-file.model";
 import * as Papa from "papaparse";
 
 export class ProductionFileParser {
-  static Serialize(productionFile: ProductionFile) {
-    
-    const headers = [
-      "Designator",
-      "Comment",
-      "Footprint",
-      "Mid X(mm)",
-      "Midpoint Y(mm)",
-      "Rotation",
-      "Head",
-      "FeederNo",
-      "Mount Speed(%)",
-      "Pick Height(mm)",
-      "Place Height(mm)",
-      "Mode",
-      "Skip",
-    ];
-    const rows = productionFile.getOperations().map((operation) => {
+  private static OperationHeaders = [
+    "Designator",
+    "Comment",
+    "Footprint",
+    "Mid X(mm)",
+    "Midpoint Y(mm)",
+    "Rotation",
+    "Head",
+    "FeederNo",
+    "Mount Speed(%)",
+    "Pick Height(mm)",
+    "Place Height(mm)",
+    "Mode",
+    "Skip",
+  ];
+
+  private static ManualOperationHeaders = [
+    "Designator",
+    "Comment",
+    "Footprint",
+    "Mid X(mm)",
+    "Midpoint Y(mm)",
+    "Rotation",
+    "Head",
+  ];
+
+  static Serialize<T extends Operation>(operations: T[]) {
+    const headers = this.IsOperationsList(operations)
+      ? this.OperationHeaders
+      : this.ManualOperationHeaders;
+
+    const rows = operations.map((operation) => {
+      return this.ExtractValues(operation);
+    });
+
+    const csv = Papa.unparse({
+      fields: headers,
+      data: rows,
+    });
+    return csv;
+  }
+
+  private static ExtractValues<T extends Operation>(operation: T) {
+    if (operation instanceof ProductionOperation) {
       return [
         operation.designator,
         operation.comment,
@@ -35,11 +65,22 @@ export class ProductionFileParser {
         operation.mode,
         operation.skip,
       ];
-    });
-    const csv = Papa.unparse({
-      fields: headers,
-      data: rows,
-    });
-    return csv;
+    } else {
+      return [
+        operation.designator,
+        operation.comment,
+        operation.footprint,
+        operation.midpointPositionX,
+        operation.midpointPositionY,
+        operation.rotation,
+        operation.head,
+      ];
+    }
+  }
+
+  private static IsOperationsList(
+    operations: any[]
+  ): operations is ProductionOperation[] {
+    return operations[0] instanceof ProductionOperation;
   }
 }
