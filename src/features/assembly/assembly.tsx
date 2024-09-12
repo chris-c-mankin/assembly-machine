@@ -15,7 +15,7 @@ import { AssemblyFile } from "../../app/models/assembly-file.model";
 import { FeederSetup } from "../../app/models/feeder-setup.model";
 import { useImmer } from "use-immer";
 import { useClientLogger } from "../../features/client-logger/client-logger";
-import { Logs } from "../../components/logs/client-logs.component";
+import { Logs } from "../../components/client-logs/client-logs.component";
 import { FileUploadComponent } from "../../controllers/file-upload/file-upload.component";
 import { ProductionFileGenerator } from "../../features/assembly-machine-production-file-generator/production-file-generator/production-file-generator.component";
 import { Layout } from "../../components/layout/layout.component";
