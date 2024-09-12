@@ -37,9 +37,6 @@ export const FileUploadProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const clearAll = () => {
     fileInputRefs.current.forEach(({ ref, resetFile }) => {
-      // if (ref.current) {
-      //   ref.current.value = ""; // Clear the input element value
-      // }
       resetFile(); // Call the function to reset the file state
     });
   };

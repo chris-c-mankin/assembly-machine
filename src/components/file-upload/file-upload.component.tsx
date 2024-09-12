@@ -32,9 +32,7 @@ export default function InputFileUpload(props: FileUploadProps) {
   const { register } = useFileUploadContext();
 
   const onDelete = () => {
-    console.log("onDelete");
     if (fileRef.current) {
-      console.log("fileRef.current");
       fileRef.current.value = "";
     }
     props.onDelete();
