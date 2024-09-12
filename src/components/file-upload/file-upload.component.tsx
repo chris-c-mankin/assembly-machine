@@ -2,8 +2,9 @@ import { Box, Button, Grid } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
-import { createRef } from "react";
+import { createRef, useEffect } from "react";
 import { FileIconWithName } from "../file-icon-with-name/file-icon-with-name.component";
+import { useFileUploadContext } from "../../controllers/file-upload/file-upload.context";
 
 export interface FileUploadProps {
   onChange: (file: File) => void;
@@ -28,13 +29,23 @@ const VisuallyHiddenInput = styled("input")({
 
 export default function InputFileUpload(props: FileUploadProps) {
   const fileRef = createRef<HTMLInputElement>();
+  const { register } = useFileUploadContext();
 
-  function onDelete() {
+  const onDelete = () => {
+    console.log("onDelete");
     if (fileRef.current) {
+      console.log("fileRef.current");
       fileRef.current.value = "";
     }
     props.onDelete();
-  }
+  };
+
+  useEffect(() => {
+    if (fileRef.current) {
+      register(fileRef, onDelete);
+    }
+  }, [register]);
+
   return (
     <Box
       sx={{
@@ -86,6 +97,7 @@ export default function InputFileUpload(props: FileUploadProps) {
           >
             {props.label}
             <VisuallyHiddenInput
+              key={props.fileName ?? ""}
               type="file"
               ref={fileRef}
               onChange={(event) => {

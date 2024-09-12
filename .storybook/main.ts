@@ -11,8 +11,24 @@ const config: StorybookConfig = {
     "@storybook/addon-interactions",
   ],
   framework: {
-    name: "@storybook/react-webpack5",
-    options: {},
+    name: '@storybook/react-webpack5',
+    options: {
+      builder: {
+        useSWC: true
+      }
+    }
   },
+  swc: () => ({
+    jsc: {
+      transform: {
+        react: {
+          runtime: 'automatic'
+        }
+      }
+    }
+  }),
+  docs: {
+    autodocs: 'tag'
+  }
 };
 export default config;
