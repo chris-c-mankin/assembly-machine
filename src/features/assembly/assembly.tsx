@@ -99,6 +99,7 @@ export function Assembly() {
   function onResetAll() {
     setState(() => ({ ...initialState }));
     clearAll();
+    logger.clearAll();
   }
 
   const canGenerate = useMemo(() => {
@@ -190,7 +191,13 @@ export function Assembly() {
             />
           </Grid>
         </Grid>
-        <Grid item xs={9}>
+        <Grid
+          item
+          xs={9}
+          sx={{
+            height: "420px",
+          }}
+        >
           <Logs logs={logger.logs} />
         </Grid>
       </Grid>

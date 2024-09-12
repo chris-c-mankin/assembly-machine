@@ -42,7 +42,11 @@ export function Layout(props: LayoutProps) {
         }}
         elevation={0}
       >
-        <Toolbar>
+        <Toolbar
+          style={{
+            paddingLeft: "16px",
+          }}
+        >
           <BuildCircleIcon sx={{ mr: 1 }} />
           <Typography variant="h6">Assembly</Typography>
         </Toolbar>

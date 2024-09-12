@@ -6,6 +6,7 @@ interface ClientLogger {
   warn: (message: string) => void;
   error: (message: string) => void;
   logs: ClientLog[];
+  clearAll: () => void;
 }
 
 const ClientLoggerContext = createContext<ClientLogger>(null!);
@@ -29,6 +30,10 @@ export const ClientLoggerContextProvider = (props: PropsWithChildren) => {
     });
   }
 
+  function clearAllLogs() {
+    setLogs(() => []);
+  }
+
   const logger: ClientLogger = useMemo(
     () => ({
       info: (message: string) => {
@@ -41,6 +46,7 @@ export const ClientLoggerContextProvider = (props: PropsWithChildren) => {
         addLog({ message, level: "error", timestamp: new Date() });
       },
       logs,
+      clearAll: clearAllLogs,
     }),
     [logs]
   );

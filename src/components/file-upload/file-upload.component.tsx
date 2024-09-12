@@ -28,19 +28,19 @@ const VisuallyHiddenInput = styled("input")({
 });
 
 export default function InputFileUpload(props: FileUploadProps) {
-  const fileRef = createRef<HTMLInputElement>();
+  const ref = createRef<HTMLInputElement>();
   const { register } = useFileUploadContext();
 
   const onDelete = () => {
-    if (fileRef.current) {
-      fileRef.current.value = "";
+    if (ref.current) {
+      ref.current.value = "";
     }
     props.onDelete();
   };
 
   useEffect(() => {
-    if (fileRef.current) {
-      register(fileRef, onDelete);
+    if (ref.current) {
+      register(ref, onDelete);
     }
   }, [register]);
 
@@ -97,7 +97,7 @@ export default function InputFileUpload(props: FileUploadProps) {
             <VisuallyHiddenInput
               key={props.fileName ?? ""}
               type="file"
-              ref={fileRef}
+              ref={ref}
               onChange={(event) => {
                 const file = event.target.files?.item(0);
                 if (file) {
