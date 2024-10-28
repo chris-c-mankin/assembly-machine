@@ -1,3 +1,4 @@
+import { ProductionFileParser } from "../parsers/production-file/production-file.parser";
 import { AssemblyFile } from "./assembly-file.model";
 import { BillOfMaterials } from "./bill-of-materials.model";
 import { FeederSetup } from "./feeder-setup.model";
@@ -11,6 +12,14 @@ export class ProductionFile {
     string,
     ManualOperation
   >();
+
+  fromCsv(csv: string): ProductionFile {
+    const operations = ProductionFileParser.Parse(csv);
+    operations.forEach((operation) => {
+      this.operations.set(operation.__key, operation);
+    });
+    return this;
+  }
 
   generateOperations(
     billOfMaterials: BillOfMaterials,
@@ -34,7 +43,7 @@ export class ProductionFile {
       operation.footprint = assemblyOperation.footprint;
       operation.midpointPositionX = assemblyOperation.midpointPositionX;
       operation.midpointPositionY = assemblyOperation.midpointPositionY;
-      operation.rotation = assemblyOperation.rotation;
+      operation.rotation = assemblyOperation.rotation - 180;
       operation.head = 0; // TODO: What is this?
 
       const feederLine = feederSetup.lines.get(sku);
@@ -58,6 +67,10 @@ export class ProductionFile {
     });
   }
 
+  getOperation(designator: string): ProductionOperation | ManualOperation | undefined {
+    return this.operations.get(designator) || this.manualOperations.get(designator);
+  }
+
   getOperations(): ProductionOperation[] {
     const operations = Array.from(this.operations.values());
     return this.sortOperations(operations);
@@ -70,7 +83,10 @@ export class ProductionFile {
 
   private sortOperations<T extends Operation>(operations: T[]): T[] {
     return operations.sort((a, b) => {
-      if (a instanceof ProductionOperation && b instanceof ProductionOperation) {
+      if (
+        a instanceof ProductionOperation &&
+        b instanceof ProductionOperation
+      ) {
         const nozzleComparison = this.compareNumbers(a.nozzle, b.nozzle);
         if (nozzleComparison !== 0) {
           return nozzleComparison;

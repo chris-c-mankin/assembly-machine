@@ -11,7 +11,7 @@ export class ProductionFileParser {
     "Comment",
     "Footprint",
     "Mid X(mm)",
-    "Midpoint Y(mm)",
+    "Mid Y(mm)",
     "Rotation",
     "Head",
     "FeederNo",
@@ -27,10 +27,81 @@ export class ProductionFileParser {
     "Comment",
     "Footprint",
     "Mid X(mm)",
-    "Midpoint Y(mm)",
+    "Mid Y(mm)",
     "Rotation",
     "Head",
   ];
+
+  static Parse(csv: string): ProductionOperation[] {
+    const headers =
+      "Designator,Comment,Footprint,Mid X(mm),Mid Y(mm),Rotation,Head,FeederNo,Mount Speed(%),Pick Height(mm),Place Height(mm),Mode,Skip";
+    const headerLineNumber = csv.split("\n").findIndex((line) =>
+      line
+        .split(",")
+        .map((cell) => cell.trim())
+        .join(",")
+        .includes(headers)
+    );
+    const csvWithoutHeaderLines = csv
+      .split("\n")
+      .slice(headerLineNumber)
+      .join("\n");
+    const result = Papa.parse<ProductionOperation>(csvWithoutHeaderLines, {
+      header: true,
+      dynamicTyping: true,
+      skipEmptyLines: "greedy",
+      transformHeader(header) {
+        switch (header.trim()) {
+          case "Designator":
+            return "designator";
+          case "Comment":
+            return "comment";
+          case "Footprint":
+            return "footprint";
+          case "Mid X(mm)":
+            return "midpointPositionX";
+          case "Mid Y(mm)":
+            return "midpointPositionY";
+          case "Rotation":
+            return "rotation";
+          case "Head":
+            return "head";
+          case "FeederNo":
+            return "feederNumber";
+          case "Mount Speed(%)":
+            return "mountSpeedPercentage";
+          case "Pick Height(mm)":
+            return "pickHeightMm";
+          case "Place Height(mm)":
+            return "placeHeightMm";
+          case "Mode":
+            return "mode";
+          case "Skip":
+            return "skip";
+          default:
+            return header;
+        }
+      },
+    });
+
+    return result.data.map((row) => {
+      const operation = new ProductionOperation();
+      operation.designator = row.designator;
+      operation.comment = row.comment;
+      operation.footprint = row.footprint;
+      operation.midpointPositionX = row.midpointPositionX;
+      operation.midpointPositionY = row.midpointPositionY;
+      operation.rotation = row.rotation;
+      operation.head = row.head;
+      operation.feederNumber = row.feederNumber;
+      operation.mountSpeedPercentage = row.mountSpeedPercentage;
+      operation.pickHeightMm = row.pickHeightMm;
+      operation.placeHeightMm = row.placeHeightMm;
+      operation.mode = row.mode;
+      operation.skip = row.skip;
+      return operation;
+    });
+  }
 
   static Serialize<T extends Operation>(operations: T[]) {
     const headers = this.IsOperationsList(operations)

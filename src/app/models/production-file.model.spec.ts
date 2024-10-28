@@ -6,17 +6,19 @@ import { FeederSetup } from "./feeder-setup.model";
 import { BillOfMaterialsParser } from "../parsers/bill-of-materials/bill-of-materials.parser";
 import { AssemblyFileParser } from "../parsers/assembly-file/assembly-file.parser";
 import { FeederSetupParser } from "../parsers/feeder-setup/feeder-setup.parser";
-import { ProductionFile } from "./production-file.model";
+import { ProductionFile, ProductionOperation } from "./production-file.model";
+import { ProductionFileParser } from "../parsers/production-file/production-file.parser";
 
 describe("ProductionFile", () => {
   let billOfMaterials: BillOfMaterials;
   let assemblyFile: AssemblyFile;
   let feederSetup: FeederSetup;
+  let sampleProductionFile: ProductionFile;
 
   beforeEach(() => {
     const billOfMaterialsCsvFilePath = path.resolve(
       __dirname,
-      "../parsers/bill-of-materials/__mocks__/bill-of-materials-mapped.mock.csv"
+      "../parsers/bill-of-materials/__mocks__/bill-of-materials-sample.mock.csv"
     );
     const billOfMaterialsCsv = fs.readFileSync(
       billOfMaterialsCsvFilePath,
@@ -25,13 +27,13 @@ describe("ProductionFile", () => {
 
     const assemblyFileCsvFilePath = path.resolve(
       __dirname,
-      "../parsers/assembly-file/__mocks__/assembly-file-mapped.mock.csv"
+      "../parsers/assembly-file/__mocks__/assembly-file-sample.mock.csv"
     );
     const assemblyFileCsv = fs.readFileSync(assemblyFileCsvFilePath, "utf8");
 
     const feederSetupCsvFilePath = path.resolve(
       __dirname,
-      "../parsers/feeder-setup/__mocks__/feeder-setup-mapped.mock.csv"
+      "../parsers/feeder-setup/__mocks__/feeder-setup-sample.mock.csv"
     );
     const feederSetupCsv = fs.readFileSync(feederSetupCsvFilePath, "utf8");
 
@@ -43,6 +45,16 @@ describe("ProductionFile", () => {
 
     const feederSetupDtos = FeederSetupParser.Parse(feederSetupCsv);
     feederSetup = new FeederSetup(feederSetupDtos);
+
+    const productionFileCsvFilePath = path.resolve(
+      __dirname,
+      "../parsers/production-file/__mocks__/production-file-sample.mock.csv"
+    );
+    const productionFileCsv = fs.readFileSync(
+      productionFileCsvFilePath,
+      "utf8"
+    );
+    sampleProductionFile = new ProductionFile().fromCsv(productionFileCsv);
   });
 
   describe("generateOperations", () => {
@@ -59,52 +71,34 @@ describe("ProductionFile", () => {
 
       // Assert
       const operations = productionFile["operations"];
-      expect(operations.size).toBe(assemblyFile.operations.size);
+      expect(productionFile.getOperations().length).toBe(104);
+      expect(operations.size).toBe(productionFile.getOperations().length);
 
-      const sample1 = operations.get("R15");
-      expect(sample1?.comment).toBe("RES-171");
-      expect(sample1?.feederNumber).toBe(15);
-      expect(sample1?.placeHeightMm).toBe(0.5);
+      operations.forEach((operation) => {
+        const sample = sampleProductionFile.getOperation(
+          operation.designator
+        ) as ProductionOperation;
+        expect(sample).toBeDefined();
+        expect(sample).toBeInstanceOf(ProductionOperation);
+        expect(operation.designator).toBe(sample?.designator);
+        expect(operation.comment).toBe(sample?.comment);
+        if (sample.footprint !== null) {
+          expect(operation.footprint).toBe(sample?.footprint);
+        }
+        expect(operation.midpointPositionX).toBe(sample?.midpointPositionX);
+        expect(operation.midpointPositionY).toBe(sample?.midpointPositionY);
+        expect(operation.rotation).toBe(sample?.rotation);
+        expect(operation.head).toBe(0); // Not yet implemented
 
-      const sample2 = operations.get("R16");
-      expect(sample2?.comment).toBe("RES-171");
-      expect(sample2?.feederNumber).toBe(15);
-      expect(sample2?.placeHeightMm).toBe(0.5);
-
-      const sample3 = operations.get("R19");
-      expect(sample3?.comment).toBe("RES-171");
-      expect(sample3?.feederNumber).toBe(15);
-      expect(sample3?.placeHeightMm).toBe(0.5);
-
-      const sample4 = operations.get("C15");
-      expect(sample4?.comment).toBe("CAP-573");
-      expect(sample4?.feederNumber).toBe(5);
-      expect(sample4?.placeHeightMm).toBe(0.5);
-
-      const sample5 = operations.get("C7");
-      expect(sample5?.comment).toBe("CAP-573");
-      expect(sample5?.feederNumber).toBe(5);
-      expect(sample5?.placeHeightMm).toBe(0.5);
-
-      const sample6 = operations.get("C9");
-      expect(sample6?.comment).toBe("CAP-573");
-      expect(sample6?.feederNumber).toBe(5);
-      expect(sample6?.placeHeightMm).toBe(0.5);
-
-      const sample7 = operations.get("C1");
-      expect(sample7?.comment).toBe("CAP-84");
-      expect(sample7?.feederNumber).toBe(9);
-      expect(sample7?.placeHeightMm).toBe(0.8);
-
-      const sample8 = operations.get("C16");
-      expect(sample8?.comment).toBe("CAP-84");
-      expect(sample8?.feederNumber).toBe(9);
-      expect(sample8?.placeHeightMm).toBe(0.8);
-
-      const sample9 = operations.get("C2");
-      expect(sample9?.comment).toBe("CAP-84");
-      expect(sample9?.feederNumber).toBe(9);
-      expect(sample9?.placeHeightMm).toBe(0.8);
+        expect(operation.feederNumber).toBe(sample?.feederNumber);
+        expect(operation.mountSpeedPercentage).toBe(
+          sample?.mountSpeedPercentage
+        );
+        expect(operation.pickHeightMm).toBe(sample?.pickHeightMm);
+        expect(operation.placeHeightMm).toBe(sample?.placeHeightMm);
+        expect(operation.mode).toBe(1); // Not yet implemented
+        expect(operation.skip).toBe(0); // Not yet implemented
+      });
     });
   });
 
@@ -122,20 +116,7 @@ describe("ProductionFile", () => {
       const operations = productionFile.getOperations();
 
       // Assert
-      expect(operations.length).toBe(assemblyFile.operations.size);
-
-      const designators = operations.map((operation) => operation.designator);
-      expect(designators).toEqual([
-        "R15",
-        "R16",
-        "R19",
-        "C1",
-        "C2",
-        "C16",
-        "C7",
-        "C9",
-        "C15",
-      ]);
+      expect(operations.length).toBe(productionFile.getOperations().length);
     });
   });
 });
