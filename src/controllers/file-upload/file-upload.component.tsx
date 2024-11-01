@@ -1,6 +1,7 @@
 import { useImmer } from "use-immer";
 import { useClientLogger } from "../../features/client-logger/client-logger";
 import InputFileUpload from "../../components/file-upload/file-upload.component";
+import * as XLSX from "xlsx";
 
 export interface FileUploadComponentProps {
   label: string;
@@ -38,9 +39,21 @@ export function FileUploadComponent(props: FileUploadComponentProps) {
     file: File | undefined
   ) {
     if (file) {
+      const mimeType = file.type;
+      logger.info(`File Upload: Processing ${props.label} with MIME type ${mimeType}`);
+      console.log('mimeType', mimeType);
       const reader = new FileReader();
       reader.onload = (event) => {
-        const csv = event.target?.result as string;
+        const buffer = event.target?.result as ArrayBuffer;
+        let csv: string;
+        console.log('file type', typeof buffer);
+        if (mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+          const workbook = XLSX.read(buffer, { type: "buffer" });
+          csv = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]]);
+          logger.info(`File Upload: Converted XLSX to CSV`);
+        } else {
+          csv = new TextDecoder("utf-8").decode(new Uint8Array(buffer));
+        }
         const isValid = onLoad(csv);
         setState((draft) => {
           draft.isValid = isValid;
@@ -50,7 +63,7 @@ export function FileUploadComponent(props: FileUploadComponentProps) {
       reader.onerror = (error) => {
         throw error;
       };
-      reader.readAsText(file);
+      reader.readAsArrayBuffer(file);
     }
   }
 

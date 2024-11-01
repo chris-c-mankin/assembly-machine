@@ -68,6 +68,7 @@
     "electron-squirrel-startup": "^1.0.1",
     "immer": "^10.1.1",
     "papaparse": "^5.4.1",
-    "use-immer": "^0.10.0"
+    "use-immer": "^0.10.0",
+    "xlsx": "^0.18.5"
   }
 }
