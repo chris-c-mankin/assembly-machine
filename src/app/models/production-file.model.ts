@@ -45,6 +45,7 @@ export class ProductionFile {
       operation.midpointPositionY = assemblyOperation.midpointPositionY;
       operation.rotation = assemblyOperation.rotation - 180;
       operation.head = 0; // TODO: What is this?
+      operation.layer = assemblyOperation.layer;
 
       const feederLine = feederSetup.lines.get(sku);
 
@@ -78,6 +79,19 @@ export class ProductionFile {
   getOperations(): ProductionOperation[] {
     const operations = Array.from(this.operations.values());
     return this.sortOperations(operations);
+  }
+
+  getOperationsByLayer() {
+    const operations = Array.from(this.operations.values());
+    const sortedOperations = this.sortOperations(operations);
+    const operationsByLayer = new Map<string, ProductionOperation[]>();
+    sortedOperations.forEach((operation) => {
+      if (!operationsByLayer.has(operation.layer)) {
+        operationsByLayer.set(operation.layer, []);
+      }
+      operationsByLayer.get(operation.layer)?.push(operation);
+    });
+    return operationsByLayer;
   }
 
   getManualOperations(): ManualOperation[] {
@@ -155,6 +169,7 @@ export class Operation {
   midpointPositionY: number;
   rotation: number;
   head: number;
+  layer: string;
 
   get __key(): string {
     return this.designator;
@@ -179,6 +194,7 @@ export class ProductionOperation extends Operation {
     productionOperation.midpointPositionY = operation.midpointPositionY;
     productionOperation.rotation = operation.rotation;
     productionOperation.head = operation.head;
+    productionOperation.layer = operation.layer;
     return productionOperation;
   }
 }

@@ -20,6 +20,8 @@ export class ProductionFileParser {
     "Place Height(mm)",
     "Mode",
     "Skip",
+    "Nozzle",
+    "Number",
   ];
 
   private static ManualOperationHeaders = [
@@ -111,8 +113,8 @@ export class ProductionFileParser {
       ? this.OperationHeaders
       : this.ManualOperationHeaders;
 
-    const rows = operations.map((operation) => {
-      return this.ExtractValues(operation);
+    const rows = operations.map((operation, idx) => {
+      return this.ExtractValues(operation, idx);
     });
 
     const csv = Papa.unparse({
@@ -122,7 +124,7 @@ export class ProductionFileParser {
     return csv;
   }
 
-  private static ExtractValues<T extends Operation>(operation: T) {
+  private static ExtractValues<T extends Operation>(operation: T, idx: number) {
     if (operation instanceof ProductionOperation) {
       return [
         operation.designator,
@@ -139,6 +141,7 @@ export class ProductionFileParser {
         operation.mode,
         operation.skip,
         operation.nozzle,
+        idx + 1,
       ];
     } else {
       return [

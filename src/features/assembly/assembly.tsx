@@ -1,12 +1,4 @@
-import {
-  Box,
-  Container,
-  createTheme,
-  CssBaseline,
-  Grid,
-  ThemeProvider,
-  Typography,
-} from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import { BillOfMaterialsParser } from "../../app/parsers/bill-of-materials/bill-of-materials.parser";
 import { AssemblyFileParser } from "../../app/parsers/assembly-file/assembly-file.parser";
 import { FeederSetupParser } from "../../app/parsers/feeder-setup/feeder-setup.parser";
@@ -17,24 +9,23 @@ import { useImmer } from "use-immer";
 import { useClientLogger } from "../../features/client-logger/client-logger";
 import { Logs } from "../../components/client-logs/client-logs.component";
 import { FileUploadComponent } from "../../controllers/file-upload/file-upload.component";
-import { ProductionFileGenerator } from "../../features/assembly-machine-production-file-generator/production-file-generator/production-file-generator.component";
 import { Layout } from "../../components/layout/layout.component";
 import { useMemo } from "react";
 import { ProductionFile } from "../../app/models/production-file.model";
 import { ProductionFileParser } from "../../app/parsers/production-file/production-file.parser";
 import { FileDownload } from "../../components/file-download/file-download.component";
-import {
-  FileUploadProvider,
-  useFileUploadContext,
-} from "../../controllers/file-upload/file-upload.context";
+import { useFileUploadContext } from "../../controllers/file-upload/file-upload.context";
 
 interface State {
   billOfMaterials?: BillOfMaterials;
   assemblyFile?: AssemblyFile;
   feederSetupFile?: FeederSetup;
   productionOperationsCsv?: string;
+  productionOperationsCsvs?: string[];
   manualOperationsCsv?: string;
   productionOperations?: Blob;
+  productionOperationsLayers?: string[];
+  productionOperations2?: Blob[];
   manualOperations?: Blob;
 }
 
@@ -139,17 +130,35 @@ export function Assembly() {
       feederSetupFile
     );
 
-    logger.info("Production File: Serializing Production File");
-    const productionFileCsv = ProductionFileParser.Serialize(
-      productionFile.getOperations()
+    logger.info(
+      "Production File: Serializing Production File by Layer and Manual Operations"
     );
+    const productionFilesByLayer = productionFile.getOperationsByLayer();
+
+    logger.info(
+      `Production File: Serializing ${productionFilesByLayer.size} Production Files`
+    );
+
+    const productionOperationsLayers: string[] = [];
+    const productionFileCsvs: string[] = [];
+    const productionFileBlobs: Blob[] = [];
+    productionFilesByLayer.forEach((file, layer) => {
+      productionOperationsLayers.push(layer);
+      const productionFileCsv = ProductionFileParser.Serialize(file);
+      productionFileCsvs.push(productionFileCsv);
+      const productionFileBlob = convertToBlob(productionFileCsv);
+      productionFileBlobs.push(productionFileBlob);
+    });
+
+    logger.info("Production File: Serializing Manual Operations File");
     const manualOperationsCsv = ProductionFileParser.Serialize(
       productionFile.getManualOperations()
     );
 
     setState((state) => {
-      state.productionOperationsCsv = productionFileCsv;
-      state.productionOperations = convertToBlob(productionFileCsv);
+      state.productionOperationsLayers = productionOperationsLayers;
+      state.productionOperationsCsvs = productionFileCsvs;
+      state.productionOperations2 = productionFileBlobs;
       state.manualOperationsCsv = manualOperationsCsv;
       state.manualOperations = convertToBlob(manualOperationsCsv);
     });
@@ -203,14 +212,16 @@ export function Assembly() {
       </Grid>
       <Box paddingTop={6}>
         <Grid container direction="column" spacing={2}>
-          {state.productionOperations ? (
-            <Grid item>
-              <FileDownload
-                blob={state.productionOperations}
-                fileName="production-operations"
-              />
-            </Grid>
-          ) : null}
+          {state.productionOperations2?.length
+            ? state.productionOperations2.map((blob, index) => (
+                <Grid item key={index}>
+                  <FileDownload
+                    blob={blob}
+                    fileName={`production-operations-layer-${state.productionOperationsLayers?.[index]}`}
+                  />
+                </Grid>
+              ))
+            : null}
           {state.manualOperations ? (
             <Grid item>
               <FileDownload
