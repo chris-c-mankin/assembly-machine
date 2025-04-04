@@ -59,7 +59,7 @@ export class ProductionFile {
       productionOperation.mountSpeedPercentage = 50; // TODO: What is this?
       productionOperation.pickHeightMm = 0; // TODO: What is this?
       productionOperation.placeHeightMm = feederLine.placeHeight || 0;
-      productionOperation.mode = 1; // TODO: What is this?
+      productionOperation.mode = 1; // TODO: What is this? This will come from the feeder setup
       productionOperation.skip = 0; // TODO: What is this?
       productionOperation.nozzle = feederLine.nozzle || 0;
 
@@ -67,8 +67,12 @@ export class ProductionFile {
     });
   }
 
-  getOperation(designator: string): ProductionOperation | ManualOperation | undefined {
-    return this.operations.get(designator) || this.manualOperations.get(designator);
+  getOperation(
+    designator: string
+  ): ProductionOperation | ManualOperation | undefined {
+    return (
+      this.operations.get(designator) || this.manualOperations.get(designator)
+    );
   }
 
   getOperations(): ProductionOperation[] {
@@ -91,14 +95,22 @@ export class ProductionFile {
         if (nozzleComparison !== 0) {
           return nozzleComparison;
         }
-        const placeHeightComparison = this.compareNumbers(
-          a.placeHeightMm,
-          b.placeHeightMm
+        const feederNumberComparison = this.compareNumbers(
+          a.feederNumber,
+          b.feederNumber
         );
-        if (placeHeightComparison !== 0) {
-          return placeHeightComparison;
+        if (feederNumberComparison !== 0) {
+          return feederNumberComparison;
         }
+        // const placeHeightComparison = this.compareNumbers(
+        //   a.placeHeightMm,
+        //   b.placeHeightMm
+        // );
+        // if (placeHeightComparison !== 0) {
+        //   return placeHeightComparison;
+        // }
       }
+
       const skuComparison = this.compareSkus(a.comment, b.comment);
       if (skuComparison !== 0) {
         return skuComparison;

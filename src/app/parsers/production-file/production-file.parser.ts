@@ -34,7 +34,7 @@ export class ProductionFileParser {
 
   static Parse(csv: string): ProductionOperation[] {
     const headers =
-      "Designator,Comment,Footprint,Mid X(mm),Mid Y(mm),Rotation,Head,FeederNo,Mount Speed(%),Pick Height(mm),Place Height(mm),Mode,Skip";
+      "Designator,Comment,Footprint,Mid X(mm),Mid Y(mm),Rotation,Head,FeederNo,Mount Speed(%),Pick Height(mm),Place Height(mm),Mode,Skip,Nozzle";
     const headerLineNumber = csv.split("\n").findIndex((line) =>
       line
         .split(",")
@@ -78,6 +78,8 @@ export class ProductionFileParser {
             return "mode";
           case "Skip":
             return "skip";
+          case "Nozzle":
+            return "nozzle";
           default:
             return header;
         }
@@ -99,6 +101,7 @@ export class ProductionFileParser {
       operation.placeHeightMm = row.placeHeightMm;
       operation.mode = row.mode;
       operation.skip = row.skip;
+      operation.nozzle = row.nozzle;
       return operation;
     });
   }
@@ -135,6 +138,7 @@ export class ProductionFileParser {
         operation.placeHeightMm,
         operation.mode,
         operation.skip,
+        operation.nozzle,
       ];
     } else {
       return [

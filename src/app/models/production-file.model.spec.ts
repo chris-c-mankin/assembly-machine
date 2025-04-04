@@ -98,6 +98,7 @@ describe("ProductionFile", () => {
         expect(operation.placeHeightMm).toBe(sample?.placeHeightMm);
         expect(operation.mode).toBe(1); // Not yet implemented
         expect(operation.skip).toBe(0); // Not yet implemented
+        expect(operation.nozzle).toBe(sample?.nozzle);
       });
     });
   });
